@@ -1,3 +1,6 @@
+## TwoPointConv
+
+
 This is the repository for implementing two-point correlation characterization using caffe
 
 The objective of this project is to utilize the caffe framework to efficiently calculate the two-point correlation function, find its derivatie w.r.t to data, and achieve a faster convergence on reconstruction.
