@@ -1,9 +1,11 @@
+#!/home/xiaolin/anaconda2/bin/python
+
 import numpy as np
 from math import sqrt
 import os
 import subprocess
 import cPickle as pickle
-class twoPointCorrelationWeightsCal():
+class weightsCal():
     def __init__(self, l1):
     	# l1 is the max distance between the two points studied
 
@@ -48,20 +50,20 @@ class twoPointCorrelationWeightsCal():
     	print "The number of distances is", len(self.weightsHash)
     	for dis in self.weightsHash:
     		print "Distance: ", dis, " number of filter: ", len(self.weightsHash[dis])
-    def dumpWeights(self):
-        if not os.path.isdir("./"+str(self.l1)):
-           subprocess.Popen("mkdir ./"+str(self.l1), shell=True)
-        with open("./"+str(self.l1)+"/weightsHash.pickle", "w+") as f:
+    def dumpWeights(self, root):
+        if not os.path.isdir("./"+root+str(self.l1)):
+           subprocess.Popen("mkdir ./"+root+str(self.l1), shell=True)
+        with open("./"+root+str(self.l1)+"/weightsHash.pickle", "w+") as f:
         	pickle.dump(self.weightsHash, f)
 
-
+"""
 if __name__ == "__main__":
 	A = twoPointCorrelationWeightsCal(50)
 	A.findWeights()
 	A.showNum()
 	if A.l1 < 10:
 		print A.weightsHash
-	A.dumpWeights()
+	A.dumpWeights()"""
 
 
    
