@@ -14,7 +14,6 @@ def generateFilter(ll):
 	# 	ll: max length of two-point distance to be considered
 	# output:
 	# 	weightsHash: all possible weightfilters
-
 	weightsHash = {}
 
 	for x1 in range(ll+1):
@@ -67,6 +66,38 @@ def generateFilter(ll):
 
 
 	return weightsHash
+
+def occurrenceCount(L1, L2):
+	# calculate the total number of occurrence for each length in the image
+	# input:
+	#    L1: the width of the image
+	#    L2: the length of the image
+	freqHash = {}
+	for x1 in range(L1):
+		for y1 in range(L2):
+			# point 1
+			for x2 in range(L1):
+				for y2 in range(L2):
+                # point 2
+					distance = int(round(sqrt((x1-x2)**2 + (y1-y2)**2)))
+					if distance not in freqHash:
+							# first occurrence
+						if distance != 0:
+							freqHash[distance] = 1./2
+						else:
+							freqHash[distance] = 1.
+					else:
+							# the distance has occurred in the previous calculation
+						if distance != 0:
+							freqHash[distance] += 1./2
+						else:
+							freqHash[distance] += 1.
+
+
+	return freqHash
+
+
+
 
 def ConvNetToProto(weightsHash, ll, data_dim):
 	# from the given weightsHash table, construct the CNN for computing two-point correlation function

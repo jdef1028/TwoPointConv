@@ -8,6 +8,8 @@ class TestCaffeNetUtil(unittest.TestCase):
 
 	def test_weights_filter_calculation(self):
 		ret = generateFilter(1)
+
+		# test weight matrix
 		self.assertTrue(np.array_equal(ret[0], [np.array([[1]])]))
 
 
@@ -20,7 +22,13 @@ class TestCaffeNetUtil(unittest.TestCase):
 		self.assertTrue(listCompare(ret[1], expected_ret1))
 
 
-	
+
+
+	def test_freq_hash_calculation(self):
+		ret = occurrenceCount(2,3)
+		self.assertTrue(ret[0] == 6)
+		self.assertTrue(ret[1] == 11)
+		self.assertTrue(ret[2] == 4)
 			                                      
 def listCompare(list1, list2):
 	for ele1 in list1:
