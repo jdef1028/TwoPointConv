@@ -20,4 +20,5 @@ Version 0.0.1
 1. move the weight calculation into caffe_net.
 2. create ConvNetProto constructor for composing .prototxt file
 3. start to write unit test with "nose".
+4. finish the ConvNetToProto function. need more test
  
