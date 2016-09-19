@@ -74,10 +74,22 @@ def ConvNetToProto(weightsHash, ll, data_dim):
 	#   weightsHash: the hash table calculated before which contains all the weights filter on different
 	#                length scale
 	#   ll: max length of the two-point distance to be considered
+
+	# ========================================================================
+	#                        Description                         
+	# In this prototxt generation script, the data layer is propagated through
+	#     a. Convolutional Filter whose weights are precalculated (with bias = -1 to cancel the partial identification)
+	#     b. in-place ReLU layer to remove 0 and -1 in the activation layer
+	#     c. fully connected layer with weights [1]*length to sum the responses up
+	#     d. concatenating layer to merge results from different filtering
+	#     e. fully connected layer to sum things up
+
     net = caffe.NetSpec()
     net.data = L.DummyData(shape=dict(dim=data_dim))
-    
+
     num_filter = 0
+
+    sum_layer_repo = []
     for LL in range(ll):
 		# the Convolutional network on different length scale needs to be constructure separately
         print "Now constructing filters at length " + str(ll) + "."
@@ -88,8 +100,8 @@ def ConvNetToProto(weightsHash, ll, data_dim):
         fc_layer_repo = [] # a temperory storage for all the fc layer names 
 
 
-        for idx in range(len(weightsHash[LL])):
-        	weights = weightsHash[LL][idx]
+        for idx in xrange(1, len(weightsHash[LL])+1):
+        	weights = weightsHash[LL][idx - 1]
         	kernel_height, kernel_width = weights.shape
         	
         	conv_layer_name = "conv_" + str(LL) + "_" + str(idx)
@@ -131,8 +143,10 @@ def ConvNetToProto(weightsHash, ll, data_dim):
 
         concat_layer_name = "concat_" + str(LL) + "_Layers"
         concat_command1 = concat_layer_name + "=["
+
         for concat_ele in fc_layer_repo[:-1]:
         	concat_command1 += concat_ele + ", "
+
         concat_command1 += fc_layer_repo[-1]
         concat_command1 += "]"
         #print concat_command1
@@ -143,19 +157,29 @@ def ConvNetToProto(weightsHash, ll, data_dim):
         exec(concat_command2)
 
         sum_layer_name = "sum_" + str(LL)
+        sum_layer_repo.append("net."+sum_layer_name)
 
         sum_command = "net." + sum_layer_name +"=L.InnerProduct(net.concat_" + str(LL) + ", num_output=1," + \
         			  "weight_filler = dict(type='constant', value=0), " + \
         			  "bias_filler = dict(type='constant', value=0))"
         #print sum_command
         exec(sum_command)
+
+    overall_concat_layer_name = "net_response_components"
+    overall_concat_command = overall_concat_layer_name + "=["
+    for response_ele in sum_layer_repo[:-1]:
+    	overall_concat_command += response_ele + ", "
+    overall_concat_command += sum_layer_repo[-1]
+    overall_concat_command += "]"
+    exec(overall_concat_command)
+
+    overall_concat_command2 = "net.response = L.Concat(*" + overall_concat_layer_name + ")"
+    exec(overall_concat_command2)
+
+
     #print net
     with open("tpConvModel.prototxt", "w") as f:
     	f.write(str(net.to_proto()))
-
-
-
-
 
 
 

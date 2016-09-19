@@ -6,16 +6,16 @@ layer {
     shape {
       dim: 1
       dim: 1
-      dim: 3
-      dim: 3
+      dim: 7
+      dim: 7
     }
   }
 }
 layer {
-  name: "conv_0_0"
+  name: "conv_0_1"
   type: "Convolution"
   bottom: "data"
-  top: "conv_0_0"
+  top: "conv_0_1"
   convolution_param {
     num_output: 1
     pad: 1
@@ -25,20 +25,20 @@ layer {
       value: 0
     }
     kernel_h: 1
-    kernel_w: 2
+    kernel_w: 1
   }
 }
 layer {
-  name: "relu_0_0"
+  name: "relu_0_1"
   type: "ReLU"
-  bottom: "conv_0_0"
-  top: "conv_0_0"
+  bottom: "conv_0_1"
+  top: "conv_0_1"
 }
 layer {
-  name: "fc_0_0"
+  name: "fc_0_1"
   type: "InnerProduct"
-  bottom: "conv_0_0"
-  top: "fc_0_0"
+  bottom: "conv_0_1"
+  top: "fc_0_1"
   inner_product_param {
     num_output: 1
     weight_filler {
@@ -54,7 +54,7 @@ layer {
 layer {
   name: "concat_0"
   type: "Concat"
-  bottom: "fc_0_0"
+  bottom: "fc_0_1"
   top: "concat_0"
 }
 layer {
@@ -73,4 +73,115 @@ layer {
       value: 0
     }
   }
+}
+layer {
+  name: "conv_1_1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv_1_1"
+  convolution_param {
+    num_output: 1
+    pad: 1
+    stride: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    kernel_h: 1
+    kernel_w: 2
+  }
+}
+layer {
+  name: "relu_1_1"
+  type: "ReLU"
+  bottom: "conv_1_1"
+  top: "conv_1_1"
+}
+layer {
+  name: "fc_1_1"
+  type: "InnerProduct"
+  bottom: "conv_1_1"
+  top: "fc_1_1"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "conv_1_2"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv_1_2"
+  convolution_param {
+    num_output: 1
+    pad: 1
+    stride: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    kernel_h: 2
+    kernel_w: 2
+  }
+}
+layer {
+  name: "relu_1_2"
+  type: "ReLU"
+  bottom: "conv_1_2"
+  top: "conv_1_2"
+}
+layer {
+  name: "fc_1_2"
+  type: "InnerProduct"
+  bottom: "conv_1_2"
+  top: "fc_1_2"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "concat_1"
+  type: "Concat"
+  bottom: "fc_1_1"
+  bottom: "fc_1_2"
+  top: "concat_1"
+}
+layer {
+  name: "sum_1"
+  type: "InnerProduct"
+  bottom: "concat_1"
+  top: "sum_1"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "response"
+  type: "Concat"
+  bottom: "sum_0"
+  bottom: "sum_1"
+  top: "response"
 }
