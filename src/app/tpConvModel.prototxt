@@ -1,0 +1,76 @@
+layer {
+  name: "data"
+  type: "DummyData"
+  top: "data"
+  dummy_data_param {
+    shape {
+      dim: 1
+      dim: 1
+      dim: 3
+      dim: 3
+    }
+  }
+}
+layer {
+  name: "conv_0_0"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv_0_0"
+  convolution_param {
+    num_output: 1
+    pad: 1
+    stride: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    kernel_h: 1
+    kernel_w: 2
+  }
+}
+layer {
+  name: "relu_0_0"
+  type: "ReLU"
+  bottom: "conv_0_0"
+  top: "conv_0_0"
+}
+layer {
+  name: "fc_0_0"
+  type: "InnerProduct"
+  bottom: "conv_0_0"
+  top: "fc_0_0"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "concat_0"
+  type: "Concat"
+  bottom: "fc_0_0"
+  top: "concat_0"
+}
+layer {
+  name: "sum_0"
+  type: "InnerProduct"
+  bottom: "concat_0"
+  top: "sum_0"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}

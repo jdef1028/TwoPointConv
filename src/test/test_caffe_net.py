@@ -18,6 +18,9 @@ class TestCaffeNetUtil(unittest.TestCase):
 			             np.array([[0,1],
 			                       [1,0]])]
 		self.assertTrue(listCompare(ret[1], expected_ret1))
+
+
+	
 			                                      
 def listCompare(list1, list2):
 	for ele1 in list1:

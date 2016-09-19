@@ -68,59 +68,90 @@ def generateFilter(ll):
 
 	return weightsHash
 
-def ConvNetProto(weightsHash, ll, data):
+def ConvNetToProto(weightsHash, ll, data_dim):
 	# from the given weightsHash table, construct the CNN for computing two-point correlation function
 	# input:
 	#   weightsHash: the hash table calculated before which contains all the weights filter on different
 	#                length scale
 	#   ll: max length of the two-point distance to be considered
     net = caffe.NetSpec()
-    net.data = data
+    net.data = L.DummyData(shape=dict(dim=data_dim))
+    
     num_filter = 0
-    for L in range(ll):
+    for LL in range(ll):
 		# the Convolutional network on different length scale needs to be constructure separately
         print "Now constructing filters at length " + str(ll) + "."
-        print "The number of filters at this length is: " + str(len(weightsHash[L]))
-        num_filter += len(weightsHash[L]) # accumulate the total number of filters
+        print "The number of filters at this length is: " + str(len(weightsHash[LL]))
+        num_filter += len(weightsHash[LL]) # accumulate the total number of filters
         print "# of Filters so far: " + str(num_filter)
         
         fc_layer_repo = [] # a temperory storage for all the fc layer names 
 
 
-        for idx in range(len(weightsHash[L])):
-        	weights = weightsHash[L][idx]
+        for idx in range(len(weightsHash[LL])):
+        	weights = weightsHash[LL][idx]
         	kernel_height, kernel_width = weights.shape
         	
-        	conv_layer_name = "conv_" + str(L) + "_" + str(idx)
-        	relu_layer_name = "relu_" + str(L) + "_" + str(idx)
-        	fc_layer_name = "fc_" + str(L) + "_" + str(idx)
-        	fc_layer_repo.append(fc_layer_name)
+        	conv_layer_name = "conv_" + str(LL) + "_" + str(idx)
+        	#print "ConvLayer: ", conv_layer_name
+
+        	relu_layer_name = "relu_" + str(LL) + "_" + str(idx)
+        	#print "ReLULayer: ", relu_layer_name
+
+        	fc_layer_name = "fc_" + str(LL) + "_" + str(idx)
+        	#print "fcLayer:", fc_layer_name
+        	fc_layer_repo.append("net."+fc_layer_name)
 
             # construct convolutional layer
-        	exec("net." + conv_layer_name + "= L.Convolution(net.data" +
-            	 ",kernel_h =" + str(kernel_height) +
-            	 ",kernel_w =" + str(kernel_width) +
-                 ",num_output = 1" +
-                 ",stride = 1" +
-                 ",pad = 1" +
-                 ",weight_filler = dict(type='constant', value=0)")
+        	conv_command = "net." + conv_layer_name + "= L.Convolution(net.data" + \
+            	 ",kernel_h =" + str(kernel_height) + \
+            	 ",kernel_w =" + str(kernel_width) + \
+                 ",num_output = 1" + \
+                 ",stride = 1" + \
+                 ",pad = 1" + \
+                 ",weight_filler = dict(type='constant', value=0))"
+        	#print conv_command
+
+        	exec(conv_command)
 
             # construct in-place relu layer
-        	exec("net." + relu_layer_name + "= L.ReLU(net." + conv_layer_name +", in_place=True)")
+
+        	relu_command = "net." + relu_layer_name + "= L.ReLU(net." + conv_layer_name +", in_place=True)"
+
+        	#print relu_command
+
+        	exec(relu_command)
 
             # construct in-place fc layer to sum up
-        	exec("net." + fc_layer_name + "=L.InnerProduct(net." + fc_layer_name+", num_output=1," +
-                 "weight_filler = dict(type='constant', value=0)," +
-                 "bias_filler = dict(type='constant', valule=0))")
+        	fc_command = "net." + fc_layer_name + "=L.InnerProduct(net." + relu_layer_name + ", num_output=1," + \
+                 "weight_filler = dict(type='constant', value=0)," + \
+                 "bias_filler = dict(type='constant', value=0))"
+        	#print fc_command
+        	exec(fc_command)
 
-        sum_layer_name = "sum_layer_" + str(L)
+        concat_layer_name = "concat_" + str(LL) + "_Layers"
+        concat_command1 = concat_layer_name + "=["
+        for concat_ele in fc_layer_repo[:-1]:
+        	concat_command1 += concat_ele + ", "
+        concat_command1 += fc_layer_repo[-1]
+        concat_command1 += "]"
+        #print concat_command1
+        exec(concat_command1)
 
-        num_fc_layer = len(fc_layer_repo)
+        concat_command2 = "net.concat_" + str(LL) + "=L.Concat(*" + concat_layer_name +")"
+        #print concat_command2
+        exec(concat_command2)
 
-        exec("net.concat_" + str(L) +" = L.Concat(*fc_layer_repo)")
+        sum_layer_name = "sum_" + str(LL)
 
+        sum_command = "net." + sum_layer_name +"=L.InnerProduct(net.concat_" + str(LL) + ", num_output=1," + \
+        			  "weight_filler = dict(type='constant', value=0), " + \
+        			  "bias_filler = dict(type='constant', value=0))"
+        #print sum_command
+        exec(sum_command)
+    #print net
     with open("tpConvModel.prototxt", "w") as f:
-    	f.write(str(net.to_protp()))
+    	f.write(str(net.to_proto()))
 
 
 
