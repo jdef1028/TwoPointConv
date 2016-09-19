@@ -1,7 +1,11 @@
+#!/home/xiaolin/anaconda2/bin/python
+
 import caffe
 import copy
 from caffe import layers as L
 from caffe import params as P
+
+
 def generateFilter(ll):
 	# generate weight filters within the given range (ll)
 
@@ -44,6 +48,7 @@ def generateFilter(ll):
 							if existing_filter.shape == CNN1.shape:
 								flag = True
 						if not flag:
+							# add the filter weights to convolutional filter repository at the specific distance
 							weightsHash[distance].append(CNN1)
 							weightsHash[distance].append(CNN2)
 
