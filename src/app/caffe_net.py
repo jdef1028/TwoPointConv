@@ -4,7 +4,8 @@ import caffe
 import copy
 from caffe import layers as L
 from caffe import params as P
-
+from math import sqrt
+import numpy as np
 
 def generateFilter(ll):
 	# generate weight filters within the given range (ll)
@@ -16,17 +17,17 @@ def generateFilter(ll):
 
 	weightsHash = {}
 
-	for x1 in range(ll):
-		for y1 in range(ll):
-			for x2 in range(ll):
-				for y2 in range(ll):
+	for x1 in range(ll+1):
+		for y1 in range(ll+1):
+			for x2 in range(ll+1):
+				for y2 in range(ll+1):
 					# iteratation for the two points (x1, y1) and (x2, y2)
 
 					distance = int(round(sqrt((x1-x2)**2 + (y1-y2)**2)))
 
 					if distance <= ll:
 						# The length of the segment is qualified. Go ahead to record
-						canvas = np.zeros(abs(x1-x2), abs(y1-y2))
+						canvas = np.zeros((abs(x1-x2)+1, abs(y1-y2)+1), dtype=int)
 						# Here we consider two possibilities
 						# 1. the two points are located at the upper left and lower right of the mask (diagnal)
 						CNN1 = copy.deepcopy(canvas)
@@ -37,20 +38,33 @@ def generateFilter(ll):
 						CNN2[0][-1] = 1
 						CNN2[-1][0] = 1
 
-					if distance not in weightsHash:
+					if distance == 0:
+						weightsHash[distance] = [CNN1]
+
+					elif distance not in weightsHash:
 						# new distance key
-						weightsHash[distance] = [CNN1, CNN2]
+						if not np.array_equal(CNN1, CNN2):
+							weightsHash[distance] = [CNN1, CNN2]
+						else:
+							weightsHash[distance] = [CNN1]
 					else:
 						# the distance key is already added, check if the filter is already there
 						# CNN1 and CNN2 should be either both in the hash or neither
-						flag = False
+						flag1 = False
+						flag2 = False
 						for existing_filter in weightsHash[distance]:
-							if existing_filter.shape == CNN1.shape:
-								flag = True
-						if not flag:
+							if np.array_equal(existing_filter, CNN1):
+								flag1 = True
+							if np.array_equal(existing_filter, CNN2):
+								flag2 = True
+
+						if not flag1:
 							# add the filter weights to convolutional filter repository at the specific distance
 							weightsHash[distance].append(CNN1)
-							weightsHash[distance].append(CNN2)
+						if not np.array_equal(CNN1, CNN2):
+							if not flag2:
+								weightsHash[distance].append(CNN2)
+
 
 	return weightsHash
 
