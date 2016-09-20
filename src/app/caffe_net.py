@@ -114,6 +114,7 @@ def ConvNetToProto(weightsHash, ll, data_dim):
 	#     c. fully connected layer with weights [1]*length to sum the responses up
 	#     d. concatenating layer to merge results from different filtering
 	#     e. fully connected layer to sum things up
+	# ========================================================================
 
     net = caffe.NetSpec()
     net.data = L.DummyData(shape=dict(dim=data_dim))
@@ -167,7 +168,7 @@ def ConvNetToProto(weightsHash, ll, data_dim):
 
             # construct in-place fc layer to sum up
         	fc_command = "net." + fc_layer_name + "=L.InnerProduct(net." + relu_layer_name + ", num_output=1," + \
-                 "weight_filler = dict(type='constant', value=0)," + \
+                 "weight_filler = dict(type='constant', value=1)," + \
                  "bias_filler = dict(type='constant', value=0))"
         	#print fc_command
         	exec(fc_command)
@@ -191,7 +192,7 @@ def ConvNetToProto(weightsHash, ll, data_dim):
         sum_layer_repo.append("net."+sum_layer_name)
 
         sum_command = "net." + sum_layer_name +"=L.InnerProduct(net.concat_" + str(LL) + ", num_output=1," + \
-        			  "weight_filler = dict(type='constant', value=0), " + \
+        			  "weight_filler = dict(type='constant', value=1), " + \
         			  "bias_filler = dict(type='constant', value=0))"
         #print sum_command
         exec(sum_command)
@@ -211,6 +212,51 @@ def ConvNetToProto(weightsHash, ll, data_dim):
     #print net
     with open("tpConvModel.prototxt", "w") as f:
     	f.write(str(net.to_proto()))
+
+
+def assignParamsToConvNet(net, weightsHash, freqHash):
+	# after loading the composed structure, assign the parameters to the params
+
+	ll = max(weightsHash.keys()) # maximum distance to be considered
+
+	for LL in range(ll):
+		numOfFilter = len(weightsHash[LL]) # the number of filters at distance LL
+
+		for idx in xrange(1, len(weightsHash[LL])+1):
+			# iterate over every stored weights
+
+			# Note: here we only need to update the weights matrix in the convolutional layer
+			#       all other layers have been handled appropriately in the net construction step
+
+            weight = weightsHash[LL][idx - 1] # extract the weight filter to be assigned
+
+            conv_layer_name = "conv_" + str(LL) + "_" + str(idx) # convolutional filter name composed before
+
+            # make sure the dimension is matching between the params and the weights matrix
+
+            d11, d12 = weight.shape
+
+            d21, d22 = net.params[conv_layer_name][0].data.shape[2:]
+
+            assert (d11 == d21)
+            assert (d12 == d22)
+
+
+
+
+            # before the assignments of the params in the conv layer, we need to convert the 2D weights filter
+            # to 4D blob
+
+
+            net.params[conv_layer_name][0].data[...] =
+
+
+
+
+
+
+
+
 
 
 
