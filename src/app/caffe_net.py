@@ -253,6 +253,11 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 
             # in addition to the assignment of the convolutional filter, we alse need to use the freqHash to rescale
             # the filterred result to frequency (probability) of the two-point correlation
+        sum_layer_name = "sum_" + str(LL)
+
+        freqNormalizer = float(freqHash[LL])
+
+        net.params[sum_layer_name][0].data[...] /= freqNormalizer
 
 	return net
 

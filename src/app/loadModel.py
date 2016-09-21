@@ -1,6 +1,9 @@
 import caffe
 from caffe_net import generateFilter, freqCount, ConvNetToProto, assignParamsToConvNet
 
+
+
+# ==== compose the caffe net and associate with appropriate weights ===
 model = "../../model/l_1"
 model += ".prototxt"
 
@@ -21,4 +24,5 @@ print "== Associate the weights filter to net =="
 
 net = assignParamsToConvNet(net, weightHash, freqHash)
 
+print freqHash, net.params['sum_1'][0].data
 
