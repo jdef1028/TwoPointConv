@@ -67,7 +67,7 @@ def generateFilter(ll):
 
 	return weightsHash
 
-def occurrenceCount(L1, L2):
+def freqCount(L1, L2):
 	# calculate the total number of occurrence for each length in the image
 	# input:
 	#    L1: the width of the image
@@ -99,7 +99,7 @@ def occurrenceCount(L1, L2):
 
 
 
-def ConvNetToProto(weightsHash, ll, data_dim):
+def ConvNetToProto(weightsHash, ll, data_dim, model_path):
 	# from the given weightsHash table, construct the CNN for computing two-point correlation function
 	# input:
 	#   weightsHash: the hash table calculated before which contains all the weights filter on different
@@ -122,9 +122,9 @@ def ConvNetToProto(weightsHash, ll, data_dim):
     num_filter = 0
 
     sum_layer_repo = []
-    for LL in range(ll):
+    for LL in range(ll+1):
 		# the Convolutional network on different length scale needs to be constructure separately
-        print "Now constructing filters at length " + str(ll) + "."
+        print "Now constructing filters at length " + str(LL) + "."
         print "The number of filters at this length is: " + str(len(weightsHash[LL]))
         num_filter += len(weightsHash[LL]) # accumulate the total number of filters
         print "# of Filters so far: " + str(num_filter)
@@ -210,7 +210,7 @@ def ConvNetToProto(weightsHash, ll, data_dim):
 
 
     #print net
-    with open("tpConvModel.prototxt", "w") as f:
+    with open(model_path, "w") as f:
     	f.write(str(net.to_proto()))
 
 
@@ -219,7 +219,7 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 
 	ll = max(weightsHash.keys()) # maximum distance to be considered
 
-	for LL in range(ll):
+	for LL in range(ll+1):
 		numOfFilter = len(weightsHash[LL]) # the number of filters at distance LL
 
 		for idx in xrange(1, len(weightsHash[LL])+1):
@@ -228,27 +228,33 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 			# Note: here we only need to update the weights matrix in the convolutional layer
 			#       all other layers have been handled appropriately in the net construction step
 
-            weight = weightsHash[LL][idx - 1] # extract the weight filter to be assigned
+			weight = copy.deepcopy(weightsHash[LL][idx - 1]) # extract the weight filter to be assigned
 
-            conv_layer_name = "conv_" + str(LL) + "_" + str(idx) # convolutional filter name composed before
+			conv_layer_name = "conv_" + str(LL) + "_" + str(idx) # convolutional filter name composed before
 
             # make sure the dimension is matching between the params and the weights matrix
 
-            d11, d12 = weight.shape
+			d11, d12 = weight.shape
 
-            d21, d22 = net.params[conv_layer_name][0].data.shape[2:]
+			d21, d22 = net.params[conv_layer_name][0].data.shape[2:]
 
-            assert (d11 == d21)
-            assert (d12 == d22)
-
-
-
+			assert (d11 == d21) # first dimension examination
+			assert (d12 == d22) # second dimension examination
+			assert type(weight) == np.ndarray
 
             # before the assignments of the params in the conv layer, we need to convert the 2D weights filter
             # to 4D blob
+		 	print weight
+		
+			weight_blob = weight[np.newaxis, np.newaxis, :, :]
 
+            # assign the weigts to the params matrix
+			net.params[conv_layer_name][0].data[...] = weight_blob
 
-            net.params[conv_layer_name][0].data[...] =
+            # in addition to the assignment of the convolutional filter, we alse need to use the freqHash to rescale
+            # the filterred result to frequency (probability) of the two-point correlation
+
+	return net
 
 
 
