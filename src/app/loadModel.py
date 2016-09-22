@@ -17,20 +17,24 @@ img = data[img_var]
 	            [0,0,0,0,0]])"""
 
 L1, L2 = img.shape
-ll = min(L1, L2) / 2
+ll = 4
 # ==== compose the caffe net and associate with appropriate weights ===
 model = "../../model/model_09222016"
 model += ".prototxt"
 
 # calculate the weights filters
+# TODO: Intermediate file dump and load to save computational time
+
 weightHash = generateFilter(ll)
 
+
 # compose the ConvNet structure in caffe
+# TODO: prototxt file examination (possibly write and load operation) to save computational time
 ConvNetToProto(weightHash, ll, [1,1,L1,L2], model)
 
 # compute the occurrence weights terms for penalty on the output
 freqHash = freqCount(L1, L2)
-
+print freqHash
 
 # load the ConvNet structure from .prototxt
 net = caffe.Net(model, caffe.TEST)
@@ -49,5 +53,5 @@ img_blob = img[np.newaxis, np.newaxis, :, :]
 net.blobs['data'].data[...] = img_blob
 net.forward()
 
-print net.blobs['response'].data
+targetResponse = net.blobs['response'].data
 
