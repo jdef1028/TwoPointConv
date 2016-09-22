@@ -37,32 +37,32 @@ def generateFilter(ll):
 						CNN2[0][-1] = 1
 						CNN2[-1][0] = 1
 
-					if distance == 0:
-						weightsHash[distance] = [CNN1]
-
-					elif distance not in weightsHash:
-						# new distance key
-						if not np.array_equal(CNN1, CNN2):
-							weightsHash[distance] = [CNN1, CNN2]
-						else:
+						if distance == 0:
 							weightsHash[distance] = [CNN1]
-					else:
-						# the distance key is already added, check if the filter is already there
-						# CNN1 and CNN2 should be either both in the hash or neither
-						flag1 = False
-						flag2 = False
-						for existing_filter in weightsHash[distance]:
-							if np.array_equal(existing_filter, CNN1):
-								flag1 = True
-							if np.array_equal(existing_filter, CNN2):
-								flag2 = True
 
-						if not flag1:
-							# add the filter weights to convolutional filter repository at the specific distance
-							weightsHash[distance].append(CNN1)
-						if not np.array_equal(CNN1, CNN2):
-							if not flag2:
-								weightsHash[distance].append(CNN2)
+						elif distance not in weightsHash:
+							# new distance key
+							if not np.array_equal(CNN1, CNN2):
+								weightsHash[distance] = [CNN1, CNN2]
+							else:
+								weightsHash[distance] = [CNN1]
+						else:
+							# the distance key is already added, check if the filter is already there
+							# CNN1 and CNN2 should be either both in the hash or neither
+							flag1 = False
+							flag2 = False
+							for existing_filter in weightsHash[distance]:
+								if np.array_equal(existing_filter, CNN1):
+									flag1 = True
+								if np.array_equal(existing_filter, CNN2):
+									flag2 = True
+
+							if not flag1:
+								# add the filter weights to convolutional filter repository at the specific distance
+								weightsHash[distance].append(CNN1)
+							if not np.array_equal(CNN1, CNN2):
+								if not flag2:
+									weightsHash[distance].append(CNN2)
 
 
 	return weightsHash
@@ -152,8 +152,9 @@ def ConvNetToProto(weightsHash, ll, data_dim, model_path):
             	 ",kernel_w =" + str(kernel_width) + \
                  ",num_output = 1" + \
                  ",stride = 1" + \
-                 ",pad = 1" + \
-                 ",weight_filler = dict(type='constant', value=0))"
+                 ",pad = 0" + \
+                 ",weight_filler = dict(type='constant', value=0)" + \
+                 ",bias_filler = dict(type='constant', value=-1))"
         	#print conv_command
 
         	exec(conv_command)
@@ -244,20 +245,20 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 
             # before the assignments of the params in the conv layer, we need to convert the 2D weights filter
             # to 4D blob
-		 	print weight
 		
 			weight_blob = weight[np.newaxis, np.newaxis, :, :]
 
             # assign the weigts to the params matrix
 			net.params[conv_layer_name][0].data[...] = weight_blob
-
+			if LL == 0:
+				net.params[conv_layer_name][1].data[...] = 0
             # in addition to the assignment of the convolutional filter, we alse need to use the freqHash to rescale
             # the filterred result to frequency (probability) of the two-point correlation
-        sum_layer_name = "sum_" + str(LL)
+		sum_layer_name = "sum_" + str(LL)
 
-        freqNormalizer = float(freqHash[LL])
+		freqNormalizer = float(freqHash[LL])
 
-        net.params[sum_layer_name][0].data[...] /= freqNormalizer
+		net.params[sum_layer_name][0].data[...] /= freqNormalizer
 
 	return net
 

@@ -18,11 +18,15 @@ layer {
   top: "conv_0_1"
   convolution_param {
     num_output: 1
-    pad: 1
+    pad: 0
     stride: 1
     weight_filler {
       type: "constant"
       value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: -1
     }
     kernel_h: 1
     kernel_w: 1
@@ -81,11 +85,15 @@ layer {
   top: "conv_1_1"
   convolution_param {
     num_output: 1
-    pad: 1
+    pad: 0
     stride: 1
     weight_filler {
       type: "constant"
       value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: -1
     }
     kernel_h: 1
     kernel_w: 2
@@ -121,11 +129,15 @@ layer {
   top: "conv_1_2"
   convolution_param {
     num_output: 1
-    pad: 1
+    pad: 0
     stride: 1
     weight_filler {
       type: "constant"
       value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: -1
     }
     kernel_h: 2
     kernel_w: 1
@@ -161,11 +173,15 @@ layer {
   top: "conv_1_3"
   convolution_param {
     num_output: 1
-    pad: 1
+    pad: 0
     stride: 1
     weight_filler {
       type: "constant"
       value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: -1
     }
     kernel_h: 2
     kernel_w: 2
@@ -201,11 +217,15 @@ layer {
   top: "conv_1_4"
   convolution_param {
     num_output: 1
-    pad: 1
+    pad: 0
     stride: 1
     weight_filler {
       type: "constant"
       value: 0
+    }
+    bias_filler {
+      type: "constant"
+      value: -1
     }
     kernel_h: 2
     kernel_w: 2
