@@ -4,8 +4,8 @@ import numpy as np
 from scipy.io import loadmat
 
 # === load binary image from the specified path ===
-mat_path = "../../data/img1.mat"
-img_var = "img_out"
+mat_path = "../../data/img1.mat" # file path of the mat file which contains the binary image
+img_var = "img_out" # variable name of the image in the .mat file
 
 data = loadmat(mat_path)
 img = data[img_var]
@@ -22,21 +22,21 @@ ll = min(L1, L2) / 2
 model = "../../model/model_09222016"
 model += ".prototxt"
 
-print "== Now calculate weights filters =="
+# calculate the weights filters
 weightHash = generateFilter(ll)
 
-print "== Now composte ConvNet =="
+# compose the ConvNet structure in caffe
 ConvNetToProto(weightHash, ll, [1,1,L1,L2], model)
 
-print "== Now compute frequency counts =="
+# compute the occurrence weights terms for penalty on the output
 freqHash = freqCount(L1, L2)
-print freqHash
-print "== load net =="
 
+
+# load the ConvNet structure from .prototxt
 net = caffe.Net(model, caffe.TEST)
 
-print "== Associate the weights filter to net =="
 
+# assign appropriate weights to the convolutional nets
 net = assignParamsToConvNet(net, weightHash, freqHash)
 
 
