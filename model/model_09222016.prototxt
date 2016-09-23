@@ -1,17 +1,4 @@
 layer {
-  name: "data"
-  type: "DummyData"
-  top: "data"
-  dummy_data_param {
-    shape {
-      dim: 1
-      dim: 1
-      dim: 5
-      dim: 5
-    }
-  }
-}
-layer {
   name: "conv_0_1"
   type: "Convolution"
   bottom: "data"

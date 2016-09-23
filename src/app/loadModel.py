@@ -1,5 +1,5 @@
 import caffe
-from caffe_net import generateFilter, freqCount, ConvNetToProto, assignParamsToConvNet
+from caffe_net import generateFilter, freqCount, ConvNetToProto, assignParamsToConvNet#, synFromConvNet
 import numpy as np
 from scipy.io import loadmat
 
@@ -55,3 +55,10 @@ net.forward()
 
 targetResponse = net.blobs['response'].data
 
+bounds = []
+for i in range(L1):
+	for j in range(L2):
+		# set bounds for each pixel
+		bounds.append((0,1))
+
+"""synthesisImg = synFromConvNet(net=net, maxiter=maxiter, maxcor=m, ftol=0, gtol=0})"""

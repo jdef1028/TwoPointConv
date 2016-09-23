@@ -6,6 +6,7 @@ from caffe import layers as L
 from caffe import params as P
 from math import sqrt
 import numpy as np
+import subprocess
 
 def generateFilter(ll):
 	# generate weight filters within the given range (ll)
@@ -212,7 +213,10 @@ def ConvNetToProto(weightsHash, ll, data_dim, model_path):
 
     #print net
     with open(model_path, "w") as f:
-    	f.write(str(net.to_proto()))
+        f.write(str(net.to_proto()))
+
+    # reformat the model file to enable backward diff on data
+    subprocess.Popen("sed -i -e '1,13d' "+model_path, shell=True).wait()
 
 
 def assignParamsToConvNet(net, weightsHash, freqHash):
@@ -261,7 +265,17 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 		net.params[sum_layer_name][0].data[...] /= freqNormalizer
 
 	return net
+"""
+def synFromConvNet(net, maxiter, maxcor, ftol, gtol, init=None):
+	# synthesis image using the two point-correlation conv net
+	
+	# initialize an random image to start with
+	if init == None:
+		init = np.random.uniform(low=0, high=1, size=net.blobs['data'].data.shape)
 
+	def f(x):
+		x = reshape(net.blobs['data'].data.shape)
+		net.foward(data=x, end='response')"""
 
 
 
