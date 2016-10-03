@@ -216,7 +216,19 @@ def ConvNetToProto(weightsHash, ll, data_dim, model_path):
         f.write(str(net.to_proto()))
 
     # reformat the model file to enable backward diff on data
+    
     subprocess.Popen("sed -i -e '1,13d' "+model_path, shell=True).wait()
+    subprocess.Popen("sed -i '1i name: \"Two point correlation ConvNet\"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '2i input: \"data\"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '3i input_dim: " + str(data_dim[0]) +"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '4i input_dim: " + str(data_dim[1]) +"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '5i input_dim: " + str(data_dim[2]) +"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '6i input_dim: " + str(data_dim[3]) +"' " + model_path, shell=True).wait()
+    subprocess.Popen("sed -i '7i force_backward: true' " + model_path, shell=True).wait()
+
+    # with the force_backward statement activated, the derivative w.r.t data mode has been on.
+    
+
 
 
 def assignParamsToConvNet(net, weightsHash, freqHash):

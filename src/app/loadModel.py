@@ -19,7 +19,7 @@ img = data[img_var]
 L1, L2 = img.shape
 ll = 4
 # ==== compose the caffe net and associate with appropriate weights ===
-model = "../../model/model_09222016"
+model = "../../model/model_09262016"
 model += ".prototxt"
 
 # calculate the weights filters
@@ -53,7 +53,11 @@ img_blob = img[np.newaxis, np.newaxis, :, :]
 net.blobs['data'].data[...] = img_blob
 net.forward()
 
-targetResponse = net.blobs['response'].data
+
+targetResponse = net.blobs['response'].data # objective two point correlation function
+
+
+# Set bounds for each pixel
 
 bounds = []
 for i in range(L1):
@@ -61,4 +65,33 @@ for i in range(L1):
 		# set bounds for each pixel
 		bounds.append((0,1))
 
-"""synthesisImg = synFromConvNet(net=net, maxiter=maxiter, maxcor=m, ftol=0, gtol=0})"""
+VF = np.sum(img)/float(L1)/float(L2) # calculate the VF 
+
+
+# initialize a random image
+
+init = np.random.randn(L1, L2)
+
+# define the function to be optimized
+def f(x):
+	# x is the current image 
+	x = x.reshape(*net.blobs['data'].data.shape)
+	net.forward(data=x) # forward propagation
+	fval = 0
+
+	# clear the current gradient, set to 0 
+	net.blobs['response'].diff[...] = np.zeros_like(net.blobs['response'].diff)
+
+	val, grad = mse_loss(net.blobs['response'].data.copy, targetResponse)
+	fval += val
+	net.blobs['response'].diff[:] += grad
+	net.backward()
+	f_grad = net.blobs['data'].diff.copy()
+
+	return [f_val, np.array(f_grad.ravel(), dtype=float)]
+
+
+
+
+
+
