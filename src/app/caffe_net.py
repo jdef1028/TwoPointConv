@@ -7,6 +7,8 @@ from caffe import params as P
 from math import sqrt
 import numpy as np
 import subprocess
+from scipy.ndimage.filters import gaussian_filter
+
 
 def generateFilter(ll):
 	# generate weight filters within the given range (ll)
@@ -277,22 +279,46 @@ def assignParamsToConvNet(net, weightsHash, freqHash):
 		net.params[sum_layer_name][0].data[...] /= freqNormalizer
 
 	return net
-"""
-def synFromConvNet(net, maxiter, maxcor, ftol, gtol, init=None):
-	# synthesis image using the two point-correlation conv net
+
+
+def mse_loss(activation, target, verbose=0):
+	# mse loss on two point correlation function
 	
-	# initialize an random image to start with
-	if init == None:
-		init = np.random.uniform(low=0, high=1, size=net.blobs['data'].data.shape)
 
-	def f(x):
-		x = reshape(net.blobs['data'].data.shape)
-		net.foward(data=x, end='response')"""
+	loss = 1./2 * (activation - target) ** 2 # mse
+	loss = loss.sum(1)
+	grad = (activation - target)
+	if verbose == 1:
+		print "Activation: ", activation
+		print "Target: ", target
+		print "Loss: ", loss
+	return [loss, grad]
 
 
 
+def deviateImg(img, option='Gaussian'):
+	# after reaching the local minimum, apply this method to deviate the solution a little bit 
+	# for escaping from local minumum
+	# input:
+	#    img: 2D - numpy array that represents the optimized image
+	#    option: method of deviation
 
+	# assertions
+	assert type(img) == np.ndarray
+	
+	options = ['Gaussian']
+	assert option in options
+	img = img.astype(float)
 
+	# apply the chosen approach to deviation
+	if option == 'Gaussian':
+		# Gaussian blur
+		# parameters:
+		sigma = 0.2
+
+		ret = gaussian_filter(img, sigma)
+
+		return ret 
 
 
 
