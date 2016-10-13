@@ -3,7 +3,17 @@ from caffe_net import generateFilter, freqCount, ConvNetToProto, assignParamsToC
 import numpy as np
 from scipy.io import loadmat
 from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
+import logging
+import datetime
+
+now = datetime.datetime.now()
+log_name = '../../log/model_' + str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute) + '.log'
+logging.basicConfig(filename=log_name, level=logging.DEBUG)
+logging.info('===== STARTED =====')
+logging.info('Start Time: ' + str(now.year) + '-' + str(now.month) + '-' + str(now.day) + ' ' + str(now.hour) + ':' + str(now.minute))
+logging.info('User: Xiaolin')
+logging.info('===================')
 # === load binary image from the specified path ===
 
 mat_path = "../../data/img2.mat" # file path of the mat file which contains the binary image
@@ -20,10 +30,16 @@ img = data[img_var]
 
 L1, L2 = img.shape
 ll = 25
+
+logging.info('===== DATA =====')
+logging.info('File: ' + mat_path)
+logging.info('Filter Range: ' + str(ll))
 # ==== compose the caffe net and associate with appropriate weights ===
-model = "../../model/model_10052016"
+model = "../../model/model_" + str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute)
 model += ".prototxt"
 
+logging.info('===== MODEL =====')
+logging.info('Model: '+ model)
 # calculate the weights filters
 # TODO: Intermediate file dump and load to save computational time
 
@@ -36,7 +52,7 @@ ConvNetToProto(weightHash, ll, [1,1,L1,L2], model)
 
 # compute the occurrence weights terms for penalty on the output
 freqHash = freqCount(L1, L2)
-print freqHash
+#print freqHash
 
 # load the ConvNet structure from .prototxt
 net = caffe.Net(model, caffe.TEST)
@@ -46,7 +62,8 @@ net = caffe.Net(model, caffe.TEST)
 net = assignParamsToConvNet(net, weightHash, freqHash)
 
 
-
+logging.info('==== MODEL LOADED =====')
+logging.info('==== MODEL FILTERS LOADED =====')
 # ===== Import image ===== 
 
 
@@ -55,10 +72,11 @@ img_blob = img[np.newaxis, np.newaxis, :, :]
 net.blobs['data'].data[...] = img_blob
 net.forward()
 
-
 targetResponse = net.blobs['response'].data.copy() # objective two point correlation function
 print "The target response is, ", targetResponse
 
+logging.info('===== TARGET RESPONSE =====')
+logging.info('Target Response: \n' + str(targetResponse))
 # Set bounds for each pixel
 
 bounds = []
@@ -72,8 +90,13 @@ VF = np.sum(img)/float(L1)/float(L2) # calculate the VF
 
 
 # initialize a random image
-
-init = np.random.uniform(low=0.5, high=0.9, size=(L1, L2))
+low_bound = 0.5
+high_bound = 0.9
+init = np.random.uniform(low=low_bound, high=high_bound, size=(L1, L2))
+logging.info('===== Initialization =====')
+logging.info('Uniformed Distribution')
+logging.info('low = '+str(low_bound))
+logging.info('high = ' + str(high_bound))
 #init = np.random.binomial(1, VF, L1*L2).reshape(L1, -1)
 
 # define the function to be optimized
@@ -96,10 +119,19 @@ def f(x):
 maxiter = 1000
 m=100
 max_loop = 3
-err_tol = 0.0001
+err_tol = 0.00001
 error = 100
 loop_num = 0
-while (loop_num < max_loop) or (error<err_tol):
+
+logging.info('===== Training Parameters =====')
+logging.info('maxiter: ', str(maxiter))
+logging.info('m: ', str(m))
+logging.info('max_loop: ', str(max_loop))
+logging.info('err_tol: ', str(err_tol))
+
+logging.info('===== Training Started =====')
+while (loop_num < max_loop) or (error>err_tol):
+	logging.info('----- Loop #' + str(loop_num) + '-----')
 	minimize_option = {'maxiter': maxiter,
 						'maxcor': m,
 						'ftol': 0,
@@ -114,8 +146,8 @@ while (loop_num < max_loop) or (error<err_tol):
 
 	optimized_structure_float = ret.x.copy()
 	optimized_structure_float = optimized_structure_float.reshape((L1, L2))
-	print "====== Iteration #" + str(loop_num) + "======"
-	print optimized_structure_float
+	#print "====== Iteration #" + str(loop_num) + "======"
+	#print optimized_structure_float
 
 	init = deviateImg(optimized_structure_float, option='Gaussian')
 	print init

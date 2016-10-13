@@ -8,7 +8,7 @@ from math import sqrt
 import numpy as np
 import subprocess
 from scipy.ndimage.filters import gaussian_filter
-
+import logging
 
 def generateFilter(ll):
 	# generate weight filters within the given range (ll)
@@ -290,8 +290,11 @@ def mse_loss(activation, target, verbose=0):
 	grad = (activation - target)
 	if verbose == 1:
 		print "Activation: ", activation
+		logging.info('Activation: ' + str(activation))
 		print "Target: ", target
+		logging.info('Target: ' + str(target))
 		print "Loss: ", loss
+		logging.info('Loss: '+str(loss))
 	return [loss, grad]
 
 
@@ -317,7 +320,7 @@ def deviateImg(img, option='Gaussian'):
 		sigma = 0.2
 
 		ret = gaussian_filter(img, sigma)
-
+		logging.info('Deviated Image: filter-Gaussian, sigma=' + str(sigma))
 		return ret 
 
 
